@@ -3,6 +3,10 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AppInfo } from './api'
 import AppSelector from './components/AppSelector'
 import AppDetail from './pages/AppDetail'
+import AppConfig from './pages/AppConfig'
+import BuildRecords from './pages/BuildRecords'
+import WorkflowList from './pages/WorkflowList'
+import WorkflowCreate from './pages/WorkflowCreate'
 
 function App() {
   const [selectedApp, setSelectedApp] = useState<AppInfo | null>(null)
@@ -30,7 +34,7 @@ function App() {
               path="/"
               element={
                 selectedApp ? (
-                  <Navigate to={`/app/${selectedApp.id}`} />
+                  <Navigate to={`/app/${selectedApp.id}/config`} />
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - 50px)', color: '#999' }}>
                     请从上方选择或创建一个 App
@@ -38,8 +42,11 @@ function App() {
                 )
               }
             />
-            <Route path="/app/:id" element={<AppDetail />} />
-            <Route path="/app/:id/flows" element={<AppDetail />} />
+            <Route path="/app/:id" element={<Navigate to="config" />} />
+            <Route path="/app/:id/config" element={<AppDetail><AppConfig /></AppDetail>} />
+            <Route path="/app/:id/builds" element={<AppDetail><BuildRecords /></AppDetail>} />
+            <Route path="/app/:id/workflows" element={<AppDetail><WorkflowList /></AppDetail>} />
+            <Route path="/app/:id/workflow/create" element={<WorkflowCreate />} />
           </Routes>
         </div>
       </div>

@@ -11,14 +11,14 @@ class WorkflowController(
     private val workflowTemplateService: WorkflowTemplateService,
     private val appService: AppService
 ) {
-    @GetMapping("/preview/{appId}")
+    @PostMapping("/preview/{appId}")
     fun previewWorkflow(
         @PathVariable appId: Long,
-        @RequestParam(required = false) flowId: Long?
+        @RequestBody workflow: Map<String, Any>
     ): ResponseEntity<Any> {
         val app = appService.getApp(appId) ?: return ResponseEntity.notFound().build()
         return try {
-            val yaml = workflowTemplateService.generateWorkflowYaml(app, flowId)
+            val yaml = workflowTemplateService.generateWorkflowYaml(app, workflow)
             ResponseEntity.ok(mapOf("yaml" to yaml))
         } catch (e: Exception) {
             ResponseEntity.badRequest().body(mapOf("error" to e.message))
@@ -28,14 +28,10 @@ class WorkflowController(
     @PostMapping("/create/{appId}")
     fun createWorkflow(
         @PathVariable appId: Long,
-        @RequestBody request: CreateWorkflowRequest
+        @RequestBody workflow: Map<String, Any>
     ): ResponseEntity<Any> {
         return try {
-            val workflowId = workflowTemplateService.createOrUpdateWorkflow(
-                appId,
-                request.workflowName,
-                request.flowId
-            )
+            val workflowId = workflowTemplateService.createOrUpdateWorkflow(appId, workflow)
             ResponseEntity.ok(mapOf("workflowId" to workflowId))
         } catch (e: NoSuchElementException) {
             ResponseEntity.notFound().build()
@@ -44,8 +40,3 @@ class WorkflowController(
         }
     }
 }
-
-data class CreateWorkflowRequest(
-    val workflowName: String = "app-build.yml",
-    val flowId: Long? = null
-)

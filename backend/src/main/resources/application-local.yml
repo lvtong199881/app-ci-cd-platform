@@ -1,30 +1,46 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/cicd?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: root
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+
 github:
   app:
+    id: "3909627"
     private-key: |
-      -----BEGIN RSA PRIVATE KEY-----
-      MIIEowIBAAKCAQEA4ISk2+oDO2qRr/oX2fhxu6FxfSf0wS4jZYn41tF7f/z46SH5
-      m/XKldCYN+CUvbDH/eciH0+kvo0t3pwj7CAoRygrZNQLlcc7+Wr6HH4+Li9+QWKh
-      sJ50UqqpvIusBiaf9Cq3roLHfaMQYkOvyvrTCczeEqvTI0E28wwPT3qgt44spVLP
-      8uojXYfYnQi7Z1wXo7WJGm1hdD7jUhT69fUQbLAzNk6mgmjSx1/yiZHwlE7PzClE
-      Pr09dqmUtJGr0jgwV6V0Beugs5Z5Jozo1MuxisRUbBKgXoz/FnTlpDUitzy9+Dr3
-      jf6d5wlSoeRlpV5dL9QfkJHuacsOomzWCR8ZvQIDAQABAoIBAQCzFbq2W5PWaevp
-      VXB/AegeROlUbnGRQa8kSAh/uTpsXalhtCL43vaHx4oTUAT0xbTQdvPFy+5ZvBzx
-      atRQfVoDYCw00dqnzvKswULdRWltx55Ko1Tbn5ijc9POPA6sHVULGqPHBDQBp/bi
-      mqD3JFj/gTVF6V6RyWv+NAlmWScnITcLPdVHqOpYZCS2pSLLjQq+NWLCy5ZsmpQ2
-      /aj4DquvwhI1VbHV1ofsKgNp22S+epaEL5JZrIgsXmcNEaAZ1efj11PUpG31hhgw
-      gTTy8Kz4xCz35pLD2iZXQqjPweDGENaJVBiJ4D+aRMcwW+5vlGlz8vt9uWZy76xh
-      f9x/WibhAoGBAPjRAK6nFXU4GsljL1NdU7rGpyMsZhyyhbDcFHk8MrLBYVcInrEZ
-      QkcopKu/MHZPkCek2iA8ALSCn1pwF+Jr6++tSHlribOWcc4oTevAP7NlMcaRxEJ0
-      mVz6EnkjXWj5evdwOG9dY00hdf14yP5xlIKQZeAZu2mAV3QTwVKrXDBVAoGBAOcA
-      DaAzBAz2v6UdbUAEHh/Wqi/2RgZcYFV0EXYCEB1gfXn6bxb7smPwkE+NX2c1l1ym
-      Y/c6zMjY5Z/BGcgW/O8xPsAP9SWr7NOqiqISBE/dIzkTy90TqpD/hT9QoulqYSV2
-      V7lVTCK2FroDLEPfHfU9+ENPV769tZn5RALkg4vJAoGAe8uJGlyZSYQLl81Ye5LA
-      mPpDqDVr7LVJ3Q/yw8sWsmeSpbntMtINbtgi7iym0QaPA5p6yHTyKN2gqV+CEq59
-      afd+SqMdlROyNc9JzZUOXJRpqpFV43ad42usi0b0L8mIy9myyn3dbT/Ls7xHzIj4
-      SenMNi63Vyt6148IrbgCmy0CgYANTH58U5OPH4GHAvuwLMyDLrubiUUcxqKxKL58
-      mb/NwSlYJWfR3em2QTo9qjjs2zP8nIOyzwrNIVeO6/INB+3F44LmUcTeR1iaEv5q
-      ODlRU7zcY1xgPOqb8Gn+bCkE4R/4pSiFvfhlIzCJwvcAbU7vOIMbdOzrSUa0N5qH
-      xBoiqQKBgEvfo7sLRKWREtUYabG9ndbu2G0yNMDW4nZFgLkw26/7JNhK2t36PNU/
-      2e1gkS1zBm8TXXfcjkc/2KCk+wEe1j8U1lldH0ZUeAXh3C4j/xzn01v/axf4YY2H
-      wyDvF/vIRo3EzZVK3+ayQ0YVHdLfQjzptntAOC1pxHNpnI3guZgB
-      -----END RSA PRIVATE KEY-----
+      MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDghKTb6gM7apGv
+      +hfZ+HG7oXF9J/TBLiNlifjW0Xt//PjpIfmb9cqV0Jg34JS9sMf95yIfT6S+jS3e
+      nCPsIChHKCtk1AuVxzv5avocfj4uL35BYqGwnnRSqqm8i6wGJp/0Kreugsd9oxBi
+      Q6/K+tMJzN4Sq9MjQTbzDA9PeqC3jiylUs/y6iNdh9idCLtnXBejtYkabWF0PuNS
+      FPr19RBssDM2TqaCaNLHX/KJkfCUTs/MKUQ+vT12qZS0kavSODBXpXQF66Czlnkm
+      jOjUy7GKxFRsEqBejP8WdOWkNSK3PL34OveN/p3nCVKh5GWlXl0v1B+Qke5pyw6i
+      bNYJHxm9AgMBAAECggEBALMVurZbk9Zp6+lVcH8B6B5E6VRucZFBryRICH+5Omxd
+      qWG0Ivje9ofHihNQBPTFtNB288XL7lm8HPFq1FB9WgNgLDTR2qfO8qzBQt1FaW3H
+      nkqjVNufmKNz0848DqwdVQsao8cENAGn9uKaoPckWP+BNUXpXpHJa/40CWZZJych
+      Nws91Ueo6lhkJLalIsuNCr41YsLLlmyalDb9qPgOq6/CEjVVsdXWh+wqA2nbZL56
+      loQvklmsiCxeZw0RoBnV5+PXU9SkbfWGGDCBNPLwrPjELPfmksPaJldCqM/B4MYQ
+      1olUGIngP5pExzBb7m+UaXPy+325ZnLvrGF/3H9aJuECgYEA+NEArqcVdTgayWMv
+      U11TusanIyxmHLKFsNwUeTwyssFhVwiesRlCRyikq78wdk+QJ6TaIDwAtIKfWnAX
+      4mvr761IeWuJs5ZxzihN68A/s2UxxpHEQnSZXPoSeSNdaPl693A4b11jTSF1/XjI
+      /nGUgpBl4Bm7aYBXdBPBUqtcMFUCgYEA5wANoDMEDPa/pR1tQAQeH9aqL/ZGBlxg
+      VXQRdgIQHWB9efpvFvuyY/CQT41fZzWXXKZj9zrMyNjln8EZyBb87zE+wA/1Javs
+      06qKohIET90jORPL3ROqkP+FP1Ci6WphJXZXuVVMIrYWugMsQ98d9T34Q09Xvr21
+      mflEAuSDi8kCgYB7y4kaXJlJhAuXzVh7ksCY+kOoNWvstUndD/LDyxayZ5Klue0y
+      0g1u2CLuLKbRBo8DmnrIdPIo3aCpX4ISrn1p935Kox2VE7I1z0nNlQ5clGmqkVXj
+      dp3ja6yLRvQvyYjL2bLKfd1tP8uzvEfMiPhJ6cw2LrdXK3rXjwituAKbLQKBgA1M
+      fnxTk48fgYcC+7AszIMuu5uJRRzGorEovnyZv83BKVglZ9Hd6bZBOj2qOOzbM/yc
+      g7LPCs0hV47r8g0H7cXjguZRxN5HWJoS/mo4OVFTvNxjXGA86pvwaf5sKQThH/il
+      KIW9+GUjMInC9wBtTu84gxt07OtJRrQ3mofEGiKpAoGAS9+juwtEpZES1Rhpsb2d
+      1u7YbTI0wNbidkWAuTDbr/sk2Era3fo81T/Z7WCRLXMGbxNdd9yORz/YoKT7AR7W
+      PxTWWV0fRlR4BeHcLiP/HOfTW/9rF/hhjYfDIO8X+8hGjcTNlUrf5rJDRhUd0t9C
+      POm2e0A4LWnEc2mcjeC5mAE=

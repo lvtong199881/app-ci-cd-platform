@@ -46,6 +46,29 @@ export interface FlowStep {
   config: Record<string, unknown>
 }
 
+// Workflow 编辑器类型
+export type StepType = 'checkout' | 'setup-jdk' | 'setup-android' | 'cache' | 'gradle' | 'gradle-test' | 'shell' | 'upload-artifact'
+
+export interface JobStep {
+  id: string
+  name: string
+  type: StepType
+  config: Record<string, string>
+}
+
+export interface Job {
+  id: string
+  name: string
+  runsOn: string
+  needs: string[]
+  steps: JobStep[]
+}
+
+export interface WorkflowConfig {
+  name: string
+  jobs: Job[]
+}
+
 export interface CreateAppRequest {
   repoUrl: string
   branch?: string
@@ -84,18 +107,22 @@ export const flowApi = {
 
 export const githubApi = {
   listWorkflows: (appId: number) =>
-    api.get<{ id: string; name: string; path: string }[]>(`/github/repos/${appId}/workflows`).then(r => r.data)
+    api.get<{ id: string; name: string; path: string }[]>(`/github/repos/${appId}/workflows`).then(r => r.data),
+  deleteWorkflow: (appId: number, path: string) =>
+    api.delete(`/github/repos/${appId}/workflows?path=${encodeURIComponent(path)}`),
+  getWorkflowFile: (appId: number, path: string) =>
+    api.get<string>(`/github/repos/${appId}/workflows/file?path=${encodeURIComponent(path)}`).then(r => r.data)
 }
 
 export const workflowApi = {
   list: (appId: number) =>
     api.get<BuildFlow[]>(`/flows/app/${appId}`).then(r => r.data),
-  preview: (appId: number, flowId?: number) =>
-    api.get<{ yaml: string }>(`/workflows/preview/${appId}`, {
-      params: flowId ? { flowId } : undefined
-    }).then(r => r.data),
-  create: (appId: number, data: { workflowName?: string; flowId?: number }) =>
-    api.post<{ workflowId: string }>(`/workflows/create/${appId}`, data).then(r => r.data)
+  preview: (appId: number, workflow: WorkflowConfig) =>
+    api.post<{ yaml: string }>(`/workflows/preview/${appId}`, workflow).then(r => r.data),
+  create: (appId: number, workflow: WorkflowConfig) =>
+    api.post<{ workflowId: string }>(`/workflows/create/${appId}`, workflow).then(r => r.data),
+  update: (appId: number, path: string, workflow: WorkflowConfig) =>
+    api.put<{ success: boolean }>(`/github/repos/${appId}/workflows?path=${encodeURIComponent(path)}`, workflow).then(r => r.data)
 }
 
 export default api

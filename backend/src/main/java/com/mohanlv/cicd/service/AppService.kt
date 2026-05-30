@@ -51,6 +51,7 @@ class AppService(
         request.branch?.let { app.branch = it }
         request.buildConfig?.let { app.buildConfig = objectMapper.writeValueAsString(it) }
         request.workflowId?.let { app.workflowId = it }
+        request.installationId?.let { app.installationId = it }
         app.updatedAt = java.time.LocalDateTime.now()
         return appRepository.save(app)
     }
@@ -85,5 +86,6 @@ data class UpdateAppRequest(
     val repoUrl: String? = null,
     val branch: String? = null,
     val buildConfig: Map<String, Any>? = null,
-    val workflowId: String? = null
+    val workflowId: String? = null,
+    val installationId: String? = null
 )
