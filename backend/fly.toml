@@ -1,0 +1,23 @@
+app = "cicd-app-platform-final"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[deploy]
+  release_command = "./gradlew bootJar"
+
+[env]
+  PORT = "8080"
+
+[org]
+  name = "personal"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8080
+
+  [[services.ports]]
+    port = 443
+
+  [[services.ports]]
+    port = 80

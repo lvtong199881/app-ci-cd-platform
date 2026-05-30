@@ -1,0 +1,1 @@
+rootProject.name = "app-ci-cd-platform"
