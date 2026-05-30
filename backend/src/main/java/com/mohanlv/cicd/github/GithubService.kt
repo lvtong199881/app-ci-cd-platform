@@ -26,6 +26,7 @@ class GithubService(
     ): Map<String, Any> {
         val token = gitHubAppService.getInstallationToken(installationId)
 
+        // workflowFileName 可以是文件名（如 release-build.yml）或数字 ID
         val url = URL("https://api.github.com/repos/$owner/$repo/actions/workflows/$workflowFileName/dispatches")
         val connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "POST"
@@ -41,10 +42,11 @@ class GithubService(
         connection.outputStream.use { it.write(requestBody.toByteArray()) }
 
         val responseCode = connection.responseCode
+        val responseBody = connection.errorStream?.bufferedReader()?.readText() ?: connection.inputStream?.bufferedReader()?.readText() ?: ""
         connection.disconnect()
 
         if (responseCode !in 200..299) {
-            throw IllegalStateException("触发 Workflow 失败: $responseCode")
+            throw IllegalStateException("触发 Workflow 失败: $responseCode, body: $responseBody, url: $url")
         }
 
         // 获取刚创建的 run
@@ -122,6 +124,27 @@ class GithubService(
             }
         }
         return null
+    }
+
+    fun listBranches(installationId: String, owner: String, repo: String): List<String> {
+        val token = gitHubAppService.getInstallationToken(installationId)
+
+        val url = URL("https://api.github.com/repos/$owner/$repo/branches")
+        val connection = url.openConnection() as HttpURLConnection
+        connection.setRequestProperty("Authorization", "Bearer $token")
+        connection.setRequestProperty("Accept", "application/vnd.github.v3+json")
+
+        val responseCode = connection.responseCode
+        if (responseCode !in 200..299) {
+            connection.disconnect()
+            return emptyList()
+        }
+
+        val response = connection.inputStream.bufferedReader().readText()
+        connection.disconnect()
+
+        val json = objectMapper.readTree(response)
+        return json.map { it.get("name").asText() }
     }
 
     fun getRunLogs(installationId: String, owner: String, repo: String, runId: Long): String {

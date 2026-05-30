@@ -16,13 +16,17 @@ class BuildController(
     fun triggerBuild(
         @PathVariable appId: Long,
         @RequestParam(required = false) flowId: Long?,
+        @RequestParam(required = false) workflowId: String?,
+        @RequestParam(required = false) ref: String?,
         @RequestBody(required = false) buildParams: Map<String, String>?
     ): ResponseEntity<Any> {
         return try {
-            ResponseEntity.ok(buildService.triggerBuild(appId, flowId, buildParams))
+            ResponseEntity.ok(buildService.triggerBuild(appId, flowId, buildParams, workflowId, ref))
         } catch (e: NoSuchElementException) {
             ResponseEntity.badRequest().body(mapOf("error" to (e.message ?: "错误")))
         } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().body(mapOf("error" to (e.message ?: "错误")))
+        } catch (e: IllegalStateException) {
             ResponseEntity.badRequest().body(mapOf("error" to (e.message ?: "错误")))
         }
     }

@@ -84,9 +84,9 @@ export const appApi = {
 }
 
 export const buildApi = {
-  trigger: (appId: number, flowId?: number, buildParams?: Record<string, string>) =>
+  trigger: (appId: number, flowId?: number, buildParams?: Record<string, string>, workflowId?: string, ref?: string) =>
     api.post<BuildRecord>(`/builds/trigger/${appId}`, buildParams, {
-      params: flowId ? { flowId } : undefined
+      params: { flowId, workflowId, ref }
     }).then(r => r.data),
   list: (appId: number, page = 0, size = 20) =>
     api.get<{ content: BuildRecord[]; totalElements: number }>(`/builds/app/${appId}`, {
@@ -108,6 +108,8 @@ export const flowApi = {
 export const githubApi = {
   listWorkflows: (appId: number) =>
     api.get<{ id: string; name: string; path: string }[]>(`/github/repos/${appId}/workflows`).then(r => r.data),
+  listBranches: (appId: number) =>
+    api.get<string[]>(`/github/repos/${appId}/branches`).then(r => r.data),
   deleteWorkflow: (appId: number, path: string) =>
     api.delete(`/github/repos/${appId}/workflows?path=${encodeURIComponent(path)}`),
   getWorkflowFile: (appId: number, path: string) =>

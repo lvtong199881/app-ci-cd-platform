@@ -3,22 +3,19 @@ spring:
     name: app-ci-cd-platform
 
   datasource:
-    url: jdbc:h2:mem:cicd;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    username: sa
+    url: jdbc:mysql://localhost:3306/cicd?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: root
     password:
-    driver-class-name: org.h2.Driver
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
         format_sql: true
-
-  h2:
-    console:
-      enabled: true
+    database-platform: org.hibernate.dialect.MySQL8Dialect
 
   jackson:
     serialization:
@@ -36,6 +33,33 @@ server:
 github:
   app:
     id: 3909627
+    private-key: |
+      MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDghKTb6gM7apGv
+      +hfZ+HG7oXF9J/TBLiNlifjW0Xt//PjpIfmb9cqV0Jg34JS9sMf95yIfT6S+jS3e
+      nCPsIChHKCtk1AuVxzv5avocfj4uL35BYqGwnnRSqqm8i6wGJp/0Kreugsd9oxBi
+      Q6/K+tMJzN4Sq9MjQTbzDA9PeqC3jiylUs/y6iNdh9idCLtnXBejtYkabWF0PuNS
+      FPr19RBssDM2TqaCaNLHX/KJkfCUTs/MKUQ+vT12qZS0kavSODBXpXQF66Czlnkm
+      jOjUy7GKxFRsEqBejP8WdOWkNSK3PL34OveN/p3nCVKh5GWlXl0v1B+Qke5pyw6i
+      bNYJHxm9AgMBAAECggEBALMVurZbk9Zp6+lVcH8B6B5E6VRucZFBryRICH+5Omxd
+      qWG0Ivje9ofHihNQBPTFtNB288XL7lm8HPFq1FB9WgNgLDTR2qfO8qzBQt1FaW3H
+      nkqjVNufmKNz0848DqwdVQsao8cENAGn9uKaoPckWP+BNUXpXpHJa/40CWZZJych
+      Nws91Ueo6lhkJLalIsuNCr41YsLLlmyalDb9qPgOq6/CEjVVsdXWh+wqA2nbZL56
+      loQvklmsiCxeZw0RoBnV5+PXU9SkbfWGGDCBNPLwrPjELPfmksPaJldCqM/B4MYQ
+      1olUGIngP5pExzBb7m+UaXPy+325ZnLvrGF/3H9aJuECgYEA+NEArqcVdTgayWMv
+      U11TusanIyxmHLKFsNwUeTwyssFhVwiesRlCRyikq78wdk+QJ6TaIDwAtIKfWnAX
+      4mvr761IeWuJs5ZxzihN68A/s2UxxpHEQnSZXPoSeSNdaPl693A4b11jTSF1/XjI
+      /nGUgpBl4Bm7aYBXdBPBUqtcMFUCgYEA5wANoDMEDPa/pR1tQAQeH9aqL/ZGBlxg
+      VXQRdgIQHWB9efpvFvuyY/CQT41fZzWXXKZj9zrMyNjln8EZyBb87zE+wA/1Javs
+      06qKohIET90jORPL3ROqkP+FP1Ci6WphJXZXuVVMIrYWugMsQ98d9T34Q09Xvr21
+      mflEAuSDi8kCgYB7y4kaXJlJhAuXzVh7ksCY+kOoNWvstUndD/LDyxayZ5Klue0y
+      0g1u2CLuLKbRBo8DmnrIdPIo3aCpX4ISrn1p935Kox2VE7I1z0nNlQ5clGmqkVXj
+      dp3ja6yLRvQvyYjL2bLKfd1tP8uzvEfMiPhJ6cw2LrdXK3rXjwituAKbLQKBgA1M
+      fnxTk48fgYcC+7AszIMuu5uJRRzGorEovnyZv83BKVglZ9Hd6bZBOj2qOOzbM/yc
+      g7LPCs0hV47r8g0H7cXjguZRxN5HWJoS/mo4OVFTvNxjXGA86pvwaf5sKQThH/il
+      KIW9+GUjMInC9wBtTu84gxt07OtJRrQ3mofEGiKpAoGAS9+juwtEpZES1Rhpsb2d
+      1u7YbTI0wNbidkWAuTDbr/sk2Era3fo81T/Z7WCRLXMGbxNdd9yORz/YoKT7AR7W
+      PxTWWV0fRlR4BeHcLiP/HOfTW/9rF/hhjYfDIO8X+8hGjcTNlUrf5rJDRhUd0t9C
+      POm2e0A4LWnEc2mcjeC5mAE=
 
 file:
   storage:

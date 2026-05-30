@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { appApi, AppInfo } from '../api'
 
 interface Props {
@@ -9,6 +10,11 @@ interface Props {
 export default function AppSelector({ onSelect, onCreateNew }: Props) {
   const [apps, setApps] = useState<AppInfo[]>([])
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const location = useLocation()
+
+  // 从 URL 中获取当前 appId
+  const match = location.pathname.match(/^\/app\/(\d+)/)
+  const currentAppId = match ? Number(match[1]) : null
 
   useEffect(() => {
     loadApps()
@@ -33,7 +39,7 @@ export default function AppSelector({ onSelect, onCreateNew }: Props) {
     <>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'nowrap', whiteSpace: 'nowrap' }}>
         <select
-          defaultValue=""
+          value={currentAppId || ''}
           onChange={e => handleSelect(e.target.value)}
           style={{ width: 180, flexShrink: 0 }}
         >

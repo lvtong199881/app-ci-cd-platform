@@ -16,10 +16,9 @@ export default function WorkflowList() {
   async function loadApp() {
     const appData = await appApi.get(Number(id))
     setApp(appData)
-    if (appData.installationId) {
-      const data = await githubApi.listWorkflows(appData.id)
-      setWorkflows(data)
-    }
+    // installationId 为空时也能加载（后端会自动获取）
+    const data = await githubApi.listWorkflows(appData.id)
+    setWorkflows(data)
   }
 
   async function handleDelete() {

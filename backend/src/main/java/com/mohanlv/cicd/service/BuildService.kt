@@ -17,24 +17,32 @@ class BuildService(
     private val appRepository: AppRepository,
     private val buildRecordRepository: BuildRecordRepository,
     private val buildFlowRepository: BuildFlowRepository,
-    private val githubService: GithubService
+    private val githubService: GithubService,
+    private val gitHubAppService: com.mohanlv.cicd.github.GitHubAppService
 ) {
     @Transactional
-    fun triggerBuild(appId: Long, flowId: Long?, buildParams: Map<String, String>?): BuildRecord {
+    fun triggerBuild(appId: Long, flowId: Long?, buildParams: Map<String, String>?, workflowIdOverride: String?, branchOverride: String?): BuildRecord {
         val app = appRepository.findById(appId).orElseThrow { NoSuchElementException("App 不存在: $appId") }
-        val workflowId = app.workflowId ?: throw IllegalArgumentException("App 未配置 Workflow ID")
-        val installationId = app.installationId ?: throw IllegalArgumentException("App 未安装 GitHub App")
+        // 如果是完整 path，提取文件名；否则直接使用
+        val workflowIdRaw = workflowIdOverride ?: app.workflowId ?: throw IllegalArgumentException("App 未配置 Workflow ID")
+        val workflowId = if (workflowIdRaw.contains("/")) {
+            workflowIdRaw.substringAfterLast("/").removeSuffix(".yml")
+        } else {
+            workflowIdRaw
+        }
+        val installationId = app.installationId ?: gitHubAppService.getInstallationIdByRepo(app.repoUrl)
+        val branch = branchOverride ?: app.branch
 
         val (owner, repo) = githubService.parseRepoInfo(app.repoUrl)
 
         // 获取构建序号
         val buildNumber = (buildRecordRepository.countByAppId(appId) + 1).toInt()
 
-        // 获取构建流程配置
+        // 获取构建流程配置（可选）
         val flowConfig = if (flowId != null) {
             buildFlowRepository.findById(flowId).orElseThrow { NoSuchElementException("构建流程不存在: $flowId") }
         } else {
-            buildFlowRepository.findByAppIdAndIsDefaultTrue(appId).orElseThrow { NoSuchElementException("未找到默认构建流程") }
+            buildFlowRepository.findByAppIdAndIsDefaultTrue(appId).orElse(null)
         }
 
         // 创建构建记录
@@ -45,14 +53,8 @@ class BuildService(
         )
         val savedRecord = buildRecordRepository.save(record)
 
-        // 触发 GitHub Actions
-        val inputs = mutableMapOf(
-            "app_key" to app.appKey,
-            "build_record_id" to savedRecord.id.toString(),
-            "flow_config" to flowConfig.flowConfig,
-            "build_params" to (buildParams?.let { com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(it) } ?: "{}")
-        )
-        val runResult = githubService.triggerWorkflow(installationId, owner, repo, workflowId, app.branch, inputs)
+        // 触发 GitHub Actions（不传 inputs，只触发 workflow）
+        val runResult = githubService.triggerWorkflow(installationId, owner, repo, workflowId, branch, emptyMap())
 
         // 更新记录
         savedRecord.workflowRunId = (runResult["runId"] as Long).toString()

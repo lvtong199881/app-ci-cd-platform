@@ -171,6 +171,27 @@ class GithubController(
         }
     }
 
+    @GetMapping("/repos/{appId}/branches")
+    fun listBranches(@PathVariable appId: Long): ResponseEntity<Any> {
+        val app = appService.getApp(appId) ?: return ResponseEntity.notFound().build()
+
+        val installationId = app.installationId ?: run {
+            try {
+                gitHubAppService.getInstallationIdByRepo(app.repoUrl)
+            } catch (e: Exception) {
+                return ResponseEntity.badRequest().body(mapOf("error" to "未找到该仓库的 GitHub App 安装"))
+            }
+        }
+
+        return try {
+            val (owner, repo) = githubService.parseRepoInfo(app.repoUrl)
+            val branches = githubService.listBranches(installationId, owner, repo)
+            ResponseEntity.ok(branches)
+        } catch (e: Exception) {
+            ResponseEntity.badRequest().body(mapOf("error" to (e.message ?: "错误")))
+        }
+    }
+
     @PutMapping("/repos/{appId}/workflows")
     fun updateWorkflow(
         @PathVariable appId: Long,

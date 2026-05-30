@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react'
-import { buildApi, BuildRecord } from '../api'
+import { buildApi, BuildRecord, githubApi } from '../api'
 
 interface Props {
   appId: number
+}
+
+interface Workflow {
+  id: string
+  name: string
+  path: string
 }
 
 export default function BuildRecords({ appId }: Props) {
@@ -12,6 +18,12 @@ export default function BuildRecords({ appId }: Props) {
   const [selectedBuild, setSelectedBuild] = useState<BuildRecord | null>(null)
   const [logs, setLogs] = useState('')
   const [loadingLogs, setLoadingLogs] = useState(false)
+  const [buildModal, setBuildModal] = useState(false)
+  const [workflows, setWorkflows] = useState<Workflow[]>([])
+  const [branches, setBranches] = useState<string[]>([])
+  const [selectedWorkflow, setSelectedWorkflow] = useState('')
+  const [selectedBranch, setSelectedBranch] = useState('')
+  const [triggering, setTriggering] = useState(false)
 
   const pageSize = 20
 
@@ -23,6 +35,40 @@ export default function BuildRecords({ appId }: Props) {
     const data = await buildApi.list(appId, page, pageSize)
     setBuilds(data.content)
     setTotal(data.totalElements)
+  }
+
+  async function openBuildModal() {
+    setBuildModal(true)
+    setTriggering(true)
+    try {
+      const [workflowList, branchList] = await Promise.all([
+        githubApi.listWorkflows(appId),
+        githubApi.listBranches(appId)
+      ])
+      setWorkflows(workflowList)
+      setBranches(branchList)
+      if (workflowList.length > 0) setSelectedWorkflow(workflowList[0].path)
+      if (branchList.length > 0) setSelectedBranch(branchList[0])
+    } catch {
+      setWorkflows([])
+      setBranches([])
+    } finally {
+      setTriggering(false)
+    }
+  }
+
+  async function handleTriggerBuild() {
+    if (!selectedWorkflow || !selectedBranch) return
+    setTriggering(true)
+    try {
+      await buildApi.trigger(appId, undefined, undefined, selectedWorkflow, selectedBranch)
+      setBuildModal(false)
+      loadBuilds()
+    } catch {
+      // 错误处理
+    } finally {
+      setTriggering(false)
+    }
   }
 
   async function handleViewLogs(build: BuildRecord) {
@@ -54,6 +100,7 @@ export default function BuildRecords({ appId }: Props) {
         <div className="flex flex-between mb-16">
           <h3>构建记录</h3>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button className="btn btn-primary" onClick={openBuildModal}>构建</button>
             <span>共 {total} 条</span>
             <button className="btn btn-default" disabled={page === 0} onClick={() => setPage(p => p - 1)}>上一页</button>
             <span>{page + 1}</span>
@@ -116,6 +163,49 @@ export default function BuildRecords({ appId }: Props) {
           }}>
             {loadingLogs ? '加载中...' : logs}
           </pre>
+        </div>
+      )}
+
+      {buildModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{ background: '#fff', padding: 24, borderRadius: 8, minWidth: 400 }}>
+            <h4 style={{ marginBottom: 16 }}>触发构建</h4>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', marginBottom: 4 }}>Workflow</label>
+              <select
+                className="form-control"
+                value={selectedWorkflow}
+                onChange={e => setSelectedWorkflow(e.target.value)}
+                style={{ width: '100%' }}
+              >
+                {workflows.map(wf => (
+                  <option key={wf.id} value={wf.path}>{wf.name}</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', marginBottom: 4 }}>分支</label>
+              <select
+                className="form-control"
+                value={selectedBranch}
+                onChange={e => setSelectedBranch(e.target.value)}
+                style={{ width: '100%' }}
+              >
+                {branches.map(br => (
+                  <option key={br} value={br}>{br}</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button className="btn btn-default" onClick={() => setBuildModal(false)}>取消</button>
+              <button className="btn btn-primary" onClick={handleTriggerBuild} disabled={triggering}>确定</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

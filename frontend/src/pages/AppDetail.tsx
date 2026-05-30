@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { appApi, AppInfo } from '../api'
 
@@ -62,7 +62,7 @@ export default function AppDetail({ children }: Props) {
 
       {/* 主内容区 */}
       <main style={{ flex: 1, padding: 24 }}>
-        {children}
+        {children && React.cloneElement(children as React.ReactElement, { appId: Number(id) })}
       </main>
     </div>
   )
