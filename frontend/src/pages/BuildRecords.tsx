@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { buildApi, BuildRecord, githubApi } from '../api'
+import { buildApi, BuildRecord, githubApi, appApi } from '../api'
 
 interface Props {
   appId: number
@@ -24,12 +24,27 @@ export default function BuildRecords({ appId }: Props) {
   const [selectedWorkflow, setSelectedWorkflow] = useState('')
   const [selectedBranch, setSelectedBranch] = useState('')
   const [triggering, setTriggering] = useState(false)
+  const [repoUrl, setRepoUrl] = useState('')
 
   const pageSize = 20
 
   useEffect(() => {
+    loadApp()
     loadBuilds()
-  }, [appId, page])
+  }, [appId])
+
+  // 每 10 秒刷新一次 pending/running 状态的构建
+  useEffect(() => {
+    const hasRunning = builds.some(b => b.status === 'pending' || b.status === 'running')
+    if (!hasRunning) return
+    const timer = setInterval(() => loadBuilds(), 10000)
+    return () => clearInterval(timer)
+  }, [builds, appId, page])
+
+  async function loadApp() {
+    const app = await appApi.get(appId)
+    setRepoUrl(app.repoUrl)
+  }
 
   async function loadBuilds() {
     const data = await buildApi.list(appId, page, pageSize)
@@ -134,7 +149,18 @@ export default function BuildRecords({ appId }: Props) {
                 </td>
                 <td>{new Date(build.createdAt).toLocaleString()}</td>
                 <td>
-                  <button className="btn btn-default" onClick={() => handleViewLogs(build)}>日志</button>
+                  {build.workflowRunId ? (
+                    <a
+                      href={`https://github.com/${repoUrl.replace('https://github.com/', '')}/actions/runs/${build.workflowRunId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-default"
+                    >
+                      日志
+                    </a>
+                  ) : (
+                    <span style={{ color: '#999' }}>日志</span>
+                  )}
                 </td>
               </tr>
             ))}
