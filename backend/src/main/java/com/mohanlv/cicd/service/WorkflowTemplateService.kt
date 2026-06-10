@@ -25,9 +25,49 @@ class WorkflowTemplateService(
         val workflowName = workflow["name"]?.toString() ?: "App Build"
         val jobsNode = workflow["jobs"]
 
+        // 处理 List 类型（来自 JSON 反序列化）
         if (jobsNode == null || jobsNode !is ArrayNode) {
-            // 降级到旧的单 job 模式
-            return generateLegacyYaml(app, workflowName)
+            val jobsList = jobsNode as? List<*>
+            if (jobsList.isNullOrEmpty()) {
+                return generateLegacyYaml(app, workflowName)
+            }
+            return buildString {
+                appendLine("name: $workflowName")
+                appendLine()
+                appendLine("on:")
+                appendLine("  workflow_dispatch:")
+                appendLine()
+                appendLine("jobs:")
+
+                jobsList.forEachIndexed { index, jobNode ->
+                    val jobMap = jobNode as? Map<*, *>
+                    val jobId = (jobMap?.get("id") as? String) ?: "job-$index"
+                    val jobName = (jobMap?.get("name") as? String) ?: jobId
+                    val runsOn = (jobMap?.get("runsOn") as? String) ?: "ubuntu-latest"
+                    val needsList = jobMap?.get("needs") as? List<*>
+                    val stepsList = jobMap?.get("steps") as? List<*>
+
+                    appendLine("  $jobId:")
+                    appendLine("    name: $jobName")
+                    appendLine("    runs-on: $runsOn")
+                    appendLine("    permissions:")
+                    appendLine("      contents: write")
+
+                    if (!needsList.isNullOrEmpty()) {
+                        val needsStr = needsList.joinToString(", ") { it?.toString() ?: "" }
+                        appendLine("    needs: [$needsStr]")
+                    }
+
+                    appendLine("    steps:")
+
+                    stepsList?.forEach { step ->
+                        val stepMap = step as? Map<*, *>
+                        if (stepMap != null) {
+                            appendLine(generateStepYamlFromMap(stepMap))
+                        }
+                    }
+                }
+            }
         }
 
         return buildString {
@@ -48,6 +88,9 @@ class WorkflowTemplateService(
                 appendLine("  $jobId:")
                 appendLine("    name: $jobName")
                 appendLine("    runs-on: $runsOn")
+                appendLine("    permissions:")
+                appendLine("      contents: write")
+                appendLine("      releases: write")
 
                 if (needsNode != null && needsNode.isArray && needsNode.size() > 0) {
                     val needsList = needsNode.map { it.asText() }.joinToString(", ")
@@ -61,6 +104,80 @@ class WorkflowTemplateService(
                         appendLine(generateStepYaml(stepNode))
                     }
                 }
+            }
+        }
+    }
+
+    private fun generateStepYamlFromMap(stepMap: Map<*, *>): String {
+        val stepType = stepMap["type"] as? String ?: ""
+        val stepName = (stepMap["name"] as? String) ?: stepType
+        val config = stepMap["config"] as? Map<*, *> ?: emptyMap<Any, Any>()
+
+        return when (stepType) {
+            "checkout" -> buildString {
+                appendLine("        - name: $stepName")
+                appendLine("          uses: actions/checkout@v4")
+            }
+            "setup-jdk" -> buildString {
+                val version = config["version"] as? String ?: "17"
+                val distribution = config["distribution"] as? String ?: "temurin"
+                appendLine("        - name: $stepName")
+                appendLine("          uses: actions/setup-java@v4")
+                appendLine("          with:")
+                appendLine("            distribution: '$distribution'")
+                appendLine("            java-version: '$version'")
+            }
+            "setup-android" -> buildString {
+                val version = config["version"] as? String ?: "latest"
+                appendLine("        - name: $stepName")
+                appendLine("          uses: android-actions/setup-android@v3")
+                appendLine("          with:")
+                appendLine("            android-version: '$version'")
+            }
+            "cache" -> buildString {
+                val path = config["path"] as? String ?: ".gradle/caches"
+                appendLine("        - name: $stepName")
+                appendLine("          uses: actions/cache@v4")
+                appendLine("          with:")
+                appendLine("            path: $path")
+                appendLine("            key: \${runner.os}-gradle-\${hashFiles('**/*.lock')}")
+            }
+            "gradle", "gradle-test" -> buildString {
+                val task = config["task"] as? String ?: (if (stepType == "gradle-test") "test" else "assembleRelease")
+                appendLine("        - name: $stepName")
+                appendLine("          run: ./gradlew $task")
+                appendLine("          shell: bash")
+            }
+            "shell" -> buildString {
+                val script = config["script"] as? String ?: ""
+                appendLine("        - name: $stepName")
+                appendLine("          run: $script")
+                appendLine("          shell: bash")
+            }
+            "create-release" -> buildString {
+                val files = config["files"] as? String ?: "app/build/outputs/apk/release/*.apk"
+                appendLine("        - name: $stepName")
+                appendLine("          run: |")
+                appendLine("            for f in $files; do")
+                appendLine("              if [ -f \"\$f\" ]; then")
+                appendLine("                dir=\$(dirname \"\$f\")")
+                appendLine("                base=\$(basename \"\$f\" .apk)")
+                appendLine("                mv \"\$f\" \"\$dir/\${base}-run\${{ github.run_number }}.apk\"")
+                appendLine("              fi")
+                appendLine("            done")
+                appendLine("          shell: bash")
+                appendLine("        - name: Upload Release")
+                appendLine("          uses: softprops/action-gh-release@v2")
+                appendLine("          with:")
+                appendLine("            files: app/build/outputs/apk/release/*-run\${{ github.run_number }}.apk")
+                appendLine("            tag_name: release-\${{ github.run_number }}")
+                appendLine("          env:")
+                appendLine("            GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}")
+            }
+            else -> buildString {
+                appendLine("        - name: $stepName")
+                appendLine("          run: echo 'Unknown step type: $stepType'")
+                appendLine("          shell: bash")
             }
         }
     }
@@ -111,14 +228,15 @@ class WorkflowTemplateService(
                 appendLine("          run: $script")
                 appendLine("          shell: bash")
             }
-            "upload-artifact" -> buildString {
-                val name = config.get("name")?.asText() ?: "app-release"
-                val path = config.get("path")?.asText() ?: "app/build/outputs/apk/release/*.apk"
+            "create-release" -> buildString {
+                val files = config.get("files")?.asText() ?: "app/build/outputs/apk/release/*.apk"
                 appendLine("        - name: $stepName")
-                appendLine("          uses: actions/upload-artifact@v4")
+                appendLine("          uses: softprops/action-gh-release@v2")
                 appendLine("          with:")
-                appendLine("            name: $name")
-                appendLine("            path: $path")
+                appendLine("            files: $files")
+                appendLine("            tag_name: release-\${{ github.run_number }}")
+                appendLine("          env:")
+                appendLine("            GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}")
             }
             else -> buildString {
                 appendLine("        - name: $stepName")

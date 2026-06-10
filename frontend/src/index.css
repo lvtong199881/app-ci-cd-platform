@@ -59,36 +59,67 @@ body {
 .btn {
   padding: 8px 16px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn:active {
+  transform: scale(0.98);
 }
 
 .btn-primary {
-  background: #1890ff;
+  background: linear-gradient(135deg, #1890ff 0%, #0969da 100%);
   color: #fff;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
 }
 
 .btn-primary:hover {
-  background: #40a9ff;
+  background: linear-gradient(135deg, #40a9ff 0%, #1890ff 100%);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
+  transform: translateY(-1px);
 }
 
 .btn-danger {
-  background: #ff4d4f;
+  background: linear-gradient(135deg, #ff4d4f 0%, #d93636 100%);
   color: #fff;
+  box-shadow: 0 2px 8px rgba(255, 77, 79, 0.3);
 }
 
 .btn-danger:hover {
-  background: #ff7875;
+  background: linear-gradient(135deg, #ff7875 0%, #ff4d4f 100%);
+  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.4);
+  transform: translateY(-1px);
 }
 
 .btn-default {
-  background: #f0f0f0;
+  background: #f5f5f5;
   color: #333;
+  border: 1px solid #d9d9d9;
 }
 
 .btn-default:hover {
-  background: #d9d9d9;
+  background: #e8e8e8;
+  border-color: #bfbfbf;
+  transform: translateY(-1px);
+}
+
+.btn-default:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 4px;
 }
 
 input, select, textarea {
@@ -195,4 +226,37 @@ input:focus, select:focus, textarea:focus {
 
 .mb-16 {
   margin-bottom: 16px;
+}
+
+/* 二维码悬浮显示 */
+.qr-wrapper {
+  position: relative;
+}
+.qr-popup {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 8px;
+  padding: 8px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.qr-wrapper:hover .qr-popup {
+  display: block;
+}
+
+/* 加载中动画 */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  display: inline-block;
+  animation: spin 1s linear infinite;
 }

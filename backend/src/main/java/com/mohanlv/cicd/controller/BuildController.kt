@@ -45,10 +45,10 @@ class BuildController(
                 "artifactUrl" to record.artifactUrl,
                 "commitSha" to record.commitSha,
                 "commitMessage" to record.commitMessage,
-                "startedAt" to record.startedAt,
-                "finishedAt" to record.finishedAt,
+                "startedAt" to record.startedAt?.toInstant(java.time.ZoneOffset.UTC)?.toEpochMilli(),
+                "finishedAt" to record.finishedAt?.toInstant(java.time.ZoneOffset.UTC)?.toEpochMilli(),
                 "durationSeconds" to record.getDurationSeconds(),
-                "createdAt" to record.createdAt
+                "createdAt" to record.createdAt.toInstant(java.time.ZoneOffset.UTC)?.toEpochMilli()
             )
         }
     }
@@ -66,11 +66,33 @@ class BuildController(
                 "artifactUrl" to record.artifactUrl,
                 "commitSha" to record.commitSha,
                 "commitMessage" to record.commitMessage,
-                "logs" to record.logs,
-                "startedAt" to record.startedAt,
-                "finishedAt" to record.finishedAt,
+                "startedAt" to record.startedAt?.toInstant(java.time.ZoneOffset.UTC)?.toEpochMilli(),
+                "finishedAt" to record.finishedAt?.toInstant(java.time.ZoneOffset.UTC)?.toEpochMilli(),
                 "durationSeconds" to record.getDurationSeconds(),
-                "createdAt" to record.createdAt
+                "createdAt" to record.createdAt.toInstant(java.time.ZoneOffset.UTC)?.toEpochMilli()
+            ))
+        } else {
+            ResponseEntity.notFound().build()
+        }
+    }
+
+    @GetMapping("/run/{workflowRunId}")
+    fun getBuildRecordByRunId(@PathVariable workflowRunId: String): ResponseEntity<Any> {
+        val record = buildService.getBuildRecordByRunId(workflowRunId)
+        return if (record != null) {
+            ResponseEntity.ok(mapOf(
+                "id" to record.id,
+                "appId" to record.app?.id,
+                "buildNumber" to record.buildNumber,
+                "status" to record.status,
+                "workflowRunId" to record.workflowRunId,
+                "artifactUrl" to record.artifactUrl,
+                "commitSha" to record.commitSha,
+                "commitMessage" to record.commitMessage,
+                "startedAt" to record.startedAt?.toInstant(java.time.ZoneOffset.UTC)?.toEpochMilli(),
+                "finishedAt" to record.finishedAt?.toInstant(java.time.ZoneOffset.UTC)?.toEpochMilli(),
+                "durationSeconds" to record.getDurationSeconds(),
+                "createdAt" to record.createdAt.toInstant(java.time.ZoneOffset.UTC)?.toEpochMilli()
             ))
         } else {
             ResponseEntity.notFound().build()
@@ -79,11 +101,27 @@ class BuildController(
 
     @GetMapping("/{id}/logs")
     fun getBuildLogs(@PathVariable id: Long): ResponseEntity<Any> {
-        val record = buildService.getBuildRecord(id)
-        return if (record != null) {
-            ResponseEntity.ok(mapOf("logs" to (record.logs ?: "")))
-        } else {
+        return try {
+            val logs = buildService.getBuildLogs(id)
+            ResponseEntity.ok(mapOf("logs" to logs))
+        } catch (e: NoSuchElementException) {
             ResponseEntity.notFound().build()
+        } catch (e: Exception) {
+            ResponseEntity.badRequest().body(mapOf("logs" to "获取日志失败: ${e.message}"))
+        }
+    }
+
+    @GetMapping("/run/{workflowRunId}/logs")
+    fun getBuildLogsByRunId(@PathVariable workflowRunId: String): ResponseEntity<Any> {
+        return try {
+            val record = buildService.getBuildRecordByRunId(workflowRunId)
+                ?: throw NoSuchElementException("BuildRecord 不存在")
+            val logs = buildService.getBuildLogs(record.id)
+            ResponseEntity.ok(mapOf("logs" to logs))
+        } catch (e: NoSuchElementException) {
+            ResponseEntity.notFound().build()
+        } catch (e: Exception) {
+            ResponseEntity.badRequest().body(mapOf("logs" to "获取日志失败: ${e.message}"))
         }
     }
 }

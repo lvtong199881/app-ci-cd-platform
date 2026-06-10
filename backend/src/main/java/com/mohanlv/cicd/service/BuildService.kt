@@ -58,6 +58,7 @@ class BuildService(
 
         // 更新记录
         savedRecord.workflowRunId = (runResult["runId"] as Long).toString()
+        savedRecord.commitSha = runResult["headSha"] as? String
         savedRecord.startedAt = LocalDateTime.now()
         buildRecordRepository.save(savedRecord)
 
@@ -72,6 +73,20 @@ class BuildService(
         return buildRecordRepository.findById(id).orElse(null)
     }
 
+    fun getBuildRecordByRunId(workflowRunId: String): BuildRecord? {
+        return buildRecordRepository.findByWorkflowRunId(workflowRunId)
+    }
+
+    fun getBuildLogs(id: Long): String {
+        val record = buildRecordRepository.findById(id).orElseThrow { NoSuchElementException("BuildRecord 不存在: $id") }
+        val app = record.app ?: throw IllegalStateException("BuildRecord 没有关联 App")
+        val runId = record.workflowRunId ?: throw IllegalStateException("BuildRecord 没有 workflowRunId")
+        val installationId = app.installationId ?: throw IllegalStateException("App 没有 installationId")
+
+        val (owner, repo) = githubService.parseRepoInfo(app.repoUrl)
+        return githubService.getRunLogs(installationId, owner, repo, runId.toLong())
+    }
+
     @Transactional
     fun updateBuildStatus(recordId: Long, status: String, artifactUrl: String? = null, logs: String? = null) {
         val record = buildRecordRepository.findById(recordId).orElse(null ?: return)
@@ -84,7 +99,7 @@ class BuildService(
         buildRecordRepository.save(record)
     }
 
-    @Scheduled(fixedDelay = 30000)
+    @Scheduled(fixedDelay = 5000)
     @Transactional
     fun syncBuildStatus() {
         val runningRecords = buildRecordRepository.findAll()
@@ -103,8 +118,8 @@ class BuildService(
                     continue
                 }
 
-                val ghStatus = ghRun["status"] as String
-                val ghConclusion = ghRun["conclusion"] as String
+                val ghStatus = ghRun["status"] as? String ?: continue
+                val ghConclusion = ghRun["conclusion"] as? String
 
                 val newStatus = when (ghStatus) {
                     "in_progress", "queued" -> "running"
@@ -120,7 +135,7 @@ class BuildService(
                 }
 
                 if (newStatus == "success" && record.artifactUrl == null) {
-                    val artifactUrl = githubService.downloadArtifact(installationId, owner, repo, runId.toLong(), "app-release")
+                    val artifactUrl = githubService.getReleaseAssetUrl(installationId, owner, repo, runId.toLong(), "app-release")
                     record.artifactUrl = artifactUrl
                 }
 

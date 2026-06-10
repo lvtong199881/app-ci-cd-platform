@@ -47,7 +47,7 @@ export interface FlowStep {
 }
 
 // Workflow 编辑器类型
-export type StepType = 'checkout' | 'setup-jdk' | 'setup-android' | 'cache' | 'gradle' | 'gradle-test' | 'shell' | 'upload-artifact'
+export type StepType = 'checkout' | 'setup-jdk' | 'setup-android' | 'cache' | 'gradle' | 'gradle-test' | 'shell' | 'create-release'
 
 export interface JobStep {
   id: string
@@ -93,7 +93,9 @@ export const buildApi = {
       params: { page, size }
     }).then(r => r.data),
   get: (id: number) => api.get<BuildRecord>(`/builds/${id}`).then(r => r.data),
-  getLogs: (id: number) => api.get<{ logs: string }>(`/builds/${id}/logs`).then(r => r.data)
+  getByRunId: (workflowRunId: string) => api.get<BuildRecord>(`/builds/run/${workflowRunId}`).then(r => r.data),
+  getLogs: (id: number) => api.get<{ logs: string }>(`/builds/${id}/logs`).then(r => r.data),
+  getLogsByRunId: (workflowRunId: string) => api.get<{ logs: string }>(`/builds/run/${workflowRunId}/logs`).then(r => r.data)
 }
 
 export const flowApi = {
@@ -101,7 +103,8 @@ export const flowApi = {
   get: (id: number) => api.get<BuildFlow>(`/flows/${id}`).then(r => r.data),
   create: (data: { appId: number; flowName: string; steps: FlowStep[]; isDefault?: boolean }) =>
     api.post<BuildFlow>('/flows', data).then(r => r.data),
-  update: (id: number, data: Partial<FlowStep>) => api.put<BuildFlow>(`/flows/${id}`, data).then(r => r.data),
+  update: (id: number, data: { flowName?: string; steps?: FlowStep[]; isDefault?: boolean }) =>
+    api.put<BuildFlow>(`/flows/${id}`, data).then(r => r.data),
   delete: (id: number) => api.delete(`/flows/${id}`)
 }
 
