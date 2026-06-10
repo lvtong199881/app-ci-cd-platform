@@ -1,16 +1,18 @@
-app = "cicd-app-platform-final"
+app = "cicd-673"
 
 [build]
   dockerfile = "Dockerfile"
 
-[deploy]
-  release_command = "./gradlew bootJar"
-
 [env]
   PORT = "8080"
+  SPRING_PROFILES_ACTIVE = "prod"
 
 [org]
   name = "personal"
+
+[vm]
+  size = "performance-1x"
+  memory = "2048mb"
 
 [[services]]
   protocol = "tcp"

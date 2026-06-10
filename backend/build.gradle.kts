@@ -27,8 +27,8 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
-    // MySQL
-    runtimeOnly("com.mysql:mysql-connector-j")
+    // PostgreSQL (Neon)
+    runtimeOnly("org.postgresql:postgresql")
 
     // H2 for development
     runtimeOnly("com.h2database:h2")

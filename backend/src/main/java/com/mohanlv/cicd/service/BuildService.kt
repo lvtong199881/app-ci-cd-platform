@@ -26,7 +26,7 @@ class BuildService(
         // 如果是完整 path，提取文件名；否则直接使用
         val workflowIdRaw = workflowIdOverride ?: app.workflowId ?: throw IllegalArgumentException("App 未配置 Workflow ID")
         val workflowId = if (workflowIdRaw.contains("/")) {
-            workflowIdRaw.substringAfterLast("/").removeSuffix(".yml")
+            workflowIdRaw.substringAfterLast("/").let { if (it.endsWith(".yml")) it else "$it.yml" }
         } else {
             workflowIdRaw
         }
